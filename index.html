@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake Om Jin</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial,sans-serif;
+}
+
+body{
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+    color:white;
+    text-align:center;
+}
+
+h1{
+    color:gold;
+    margin-top:20px;
+}
+
+#ui{
+    margin:15px;
+    display:flex;
+    justify-content:center;
+    gap:20px;
+    flex-wrap:wrap;
+    font-size:18px;
+}
+
+canvas{
+    border:4px solid gold;
+    background:#111827;
+    max-width:95vw;
+}
+
+button{
+    background:gold;
+    border:none;
+    padding:10px 20px;
+    margin:10px;
+    border-radius:10px;
+    cursor:pointer;
+    font-weight:bold;
+}
+
+button:hover{
+    background:orange;
+}
+
+#menu{
+    margin-top:15px;
+}
+
+#msg{
+    margin-top:10px;
+    font-size:20px;
+    color:#22c55e;
+}
+
+.mobile{
+    margin-top:15px;
+}
+
+.mobile button{
+    width:70px;
+    height:70px;
+    font-size:24px;
+}
+</style>
+</head>
+<body>
+
+<h1>🧞 Snake Om Jin</h1>
+
+<div id="ui">
+    <div>⭐ Skor: <span id="score">0</span></div>
+    <div>🏆 Level: <span id="level">1</span></div>
+</div>
+
+<div id="menu">
+    <button onclick="startGame()">Mulai Game</button>
+</div>
+
+<p id="msg">
+Kumpulkan Lampu Ajaib dan hindari Jin Jahil!
+</p>
+
+<br>
+
+<canvas id="game" width="500" height="500"></canvas>
+
+<div class="mobile">
+    <div>
+        <button onclick="changeDir('UP')">⬆️</button>
+    </div>
+    <div>
+        <button onclick="changeDir('LEFT')">⬅️</button>
+        <button onclick="changeDir('DOWN')">⬇️</button>
+        <button onclick="changeDir('RIGHT')">➡️</button>
+    </div>
+</div>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const box = 25;
+
+let snake;
+let lamp;
+let enemy;
+
+let score;
+let level;
+let speed;
+let dir;
+let game;
+
+function resetGame(){
+
+snake = [
+    {x:250,y:250}
+];
+
+lamp = randomFood();
+
+enemy = {
+    x:100,
+    y:100
+};
+
+score = 0;
+level = 1;
+speed = 180;
+dir = "RIGHT";
+
+updateUI();
+
+}
+
+function randomFood(){
+    return{
+        x:Math.floor(Math.random()*20)*25,
+        y:Math.floor(Math.random()*20)*25
+    };
+}
+
+function updateUI(){
+    document.getElementById("score").innerText = score;
+    document.getElementById("level").innerText = level;
+}
+
+function startGame(){
+
+clearInterval(game);
+
+resetGame();
+
+game = setInterval(draw,speed);
+
+document.getElementById("msg").innerText =
+"Selamat bermain, Om Jin!";
+}
+
+document.addEventListener("keydown",(e)=>{
+
+if(e.key==="ArrowLeft" && dir!=="RIGHT") dir="LEFT";
+if(e.key==="ArrowRight" && dir!=="LEFT") dir="RIGHT";
+if(e.key==="ArrowUp" && dir!=="DOWN") dir="UP";
+if(e.key==="ArrowDown" && dir!=="UP") dir="DOWN";
+
+});
+
+function changeDir(newDir){
+
+if(newDir==="LEFT" && dir!=="RIGHT") dir="LEFT";
+if(newDir==="RIGHT" && dir!=="LEFT") dir="RIGHT";
+if(newDir==="UP" && dir!=="DOWN") dir="UP";
+if(newDir==="DOWN" && dir!=="UP") dir="DOWN";
+
+}
+
+function collision(head,array){
+
+for(let i=0;i<array.length;i++){
+
+if(head.x===array[i].x &&
+head.y===array[i].y){
+return true;
+}
+
+}
+
+return false;
+}
+
+function levelSystem(){
+
+let newLevel = 1;
+
+if(score>=5) newLevel=2;
+if(score>=10) newLevel=3;
+if(score>=15) newLevel=4;
+if(score>=20) newLevel=5;
+
+if(newLevel!==level){
+
+level = newLevel;
+
+clearInterval(game);
+
+speed = Math.max(60,180-(level*20));
+
+game = setInterval(draw,speed);
+
+document.getElementById("msg").innerText =
+"Naik ke Level " + level + "!";
+}
+
+}
+
+function moveEnemy(){
+
+if(level < 4) return;
+
+let r = Math.floor(Math.random()*4);
+
+if(r===0) enemy.x += box;
+if(r===1) enemy.x -= box;
+if(r===2) enemy.y += box;
+if(r===3) enemy.y -= box;
+
+if(enemy.x<0) enemy.x=0;
+if(enemy.y<0) enemy.y=0;
+if(enemy.x>475) enemy.x=475;
+if(enemy.y>475) enemy.y=475;
+
+}
+
+function draw(){
+
+ctx.fillStyle="#111827";
+ctx.fillRect(0,0,500,500);
+
+ctx.fillStyle="gold";
+ctx.beginPath();
+ctx.arc(lamp.x+12,lamp.y+12,10,0,Math.PI*2);
+ctx.fill();
+
+if(level>=4){
+
+ctx.fillStyle="red";
+ctx.fillRect(enemy.x,enemy.y,box,box);
+
+}
+
+for(let i=0;i<snake.length;i++){
+
+ctx.fillStyle =
+i===0 ? "#22c55e" : "#86efac";
+
+ctx.fillRect(
+snake[i].x,
+snake[i].y,
+box,
+box
+);
+
+}
+
+let headX = snake[0].x;
+let headY = snake[0].y;
+
+if(dir==="LEFT") headX -= box;
+if(dir==="RIGHT") headX += box;
+if(dir==="UP") headY -= box;
+if(dir==="DOWN") headY += box;
+
+if(headX===lamp.x &&
+headY===lamp.y){
+
+score++;
+
+lamp = randomFood();
+
+}else{
+
+snake.pop();
+
+}
+
+let head = {
+x:headX,
+y:headY
+};
+
+if(
+headX<0 ||
+headY<0 ||
+headX>=500 ||
+headY>=500 ||
+collision(head,snake)
+){
+
+clearInterval(game);
+
+document.getElementById("msg").innerText =
+"💀 Game Over! Skor: " + score;
+
+return;
+}
+
+if(level>=4){
+
+moveEnemy();
+
+if(
+head.x===enemy.x &&
+head.y===enemy.y
+){
+
+clearInterval(game);
+
+document.getElementById("msg").innerText =
+"👹 Kamu ditangkap Jin Jahil!";
+
+return;
+}
+
+}
+
+snake.unshift(head);
+
+updateUI();
+levelSystem();
+
+if(score>=25){
+
+clearInterval(game);
+
+document.getElementById("msg").innerText =
+"🏆 SELAMAT! Om Jin Menang!";
+}
+
+}
+
+resetGame();
+
+</script>
+
+</body>
+</html>
